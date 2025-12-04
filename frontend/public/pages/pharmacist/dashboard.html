@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacist Dashboard - MedAssist</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-primary">Pharmacist</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="inventory.html" class="nav-link">Inventory</a>
+          <a href="orders.html" class="nav-link">Orders</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">P</span>
+              <span class="user-name" id="user-name">Pharmacist</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <a href="#" class="dropdown-item" id="profile-link">My Profile</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p class="text-secondary">Welcome back! Here's your pharmacy overview.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <div class="stat-value" id="pending-orders">0</div>
+            <div class="stat-label">Pending Orders</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-value" id="completed-today">0</div>
+            <div class="stat-label">Completed Today</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💊</div>
+          <div class="stat-content">
+            <div class="stat-value" id="total-medicines">0</div>
+            <div class="stat-label">Total Medicines</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-content">
+            <div class="stat-value" id="low-stock">0</div>
+            <div class="stat-label">Low Stock Items</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>Recent Orders</h2>
+          <a href="orders.html" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table" id="recent-orders-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders-body">
+                <tr>
+                  <td colspan="6" class="text-center text-secondary">Loading orders...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="dashboard-section">
+        <h2>Quick Actions</h2>
+        <div class="action-grid">
+          <a href="inventory.html" class="action-card">
+            <span class="action-icon">➕</span>
+            <span class="action-label">Add Inventory</span>
+          </a>
+          <a href="orders.html" class="action-card">
+            <span class="action-icon">📋</span>
+            <span class="action-label">View Orders</span>
+          </a>
+          <a href="#" class="action-card" id="reports-link">
+            <span class="action-icon">📊</span>
+            <span class="action-label">View Reports</span>
+          </a>
+          <a href="#" class="action-card" id="settings-link">
+            <span class="action-icon">⚙️</span>
+            <span class="action-label">Settings</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Alerts -->
+      <section class="dashboard-section">
+        <h2>Alerts</h2>
+        <div id="alerts-container">
+          <div class="alert alert-warning">
+            <strong>Low Stock Alert:</strong> 5 items are running low on stock.
+            <a href="inventory.html?filter=low_stock">View Items</a>
+          </div>
+          <div class="alert alert-info">
+            <strong>Expiring Soon:</strong> 3 items will expire within 30 days.
+            <a href="inventory.html?filter=expiring">View Items</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Medical Disclaimer -->
+  <section class="disclaimer-section">
+    <div class="container">
+      <div class="disclaimer-box">
+        <h3>⚠️ Medical Disclaimer</h3>
+        <p>Ensure all prescription medicines are dispensed only with valid prescriptions. Verify patient identity and prescription authenticity before dispensing controlled substances.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    // Pharmacist Dashboard Logic
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is a pharmacist
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('pharmacist')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Pharmacist';
+      document.getElementById('user-avatar').textContent = (user.name || 'P')[0].toUpperCase();
+
+      // Toggle user dropdown
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      // Logout
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      // Load dashboard data
+      await loadDashboardData();
+    });
+
+    async function loadDashboardData() {
+      try {
+        // Load stats (simulated for now)
+        document.getElementById('pending-orders').textContent = '3';
+        document.getElementById('completed-today').textContent = '12';
+        document.getElementById('total-medicines').textContent = '156';
+        document.getElementById('low-stock').textContent = '5';
+
+        // Load recent orders (simulated)
+        const ordersBody = document.getElementById('recent-orders-body');
+        ordersBody.innerHTML = `
+          <tr>
+            <td>#ORD-001</td>
+            <td>John Doe</td>
+            <td>3 items</td>
+            <td>₹450</td>
+            <td><span class="badge badge-warning">Pending</span></td>
+            <td>
+              <button class="btn btn-sm btn-primary">Accept</button>
+              <button class="btn btn-sm btn-outline">Decline</button>
+            </td>
+          </tr>
+          <tr>
+            <td>#ORD-002</td>
+            <td>Jane Smith</td>
+            <td>2 items</td>
+            <td>₹280</td>
+            <td><span class="badge badge-info">Preparing</span></td>
+            <td>
+              <button class="btn btn-sm btn-success">Ready</button>
+            </td>
+          </tr>
+          <tr>
+            <td>#ORD-003</td>
+            <td>Mike Johnson</td>
+            <td>5 items</td>
+            <td>₹890</td>
+            <td><span class="badge badge-success">Completed</span></td>
+            <td>
+              <button class="btn btn-sm btn-outline">View</button>
+            </td>
+          </tr>
+        `;
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      }
+    }
+  </script>
+</body>
+</html>

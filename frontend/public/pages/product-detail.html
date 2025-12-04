@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - MedAssist</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+        </a>
+        
+        <nav class="nav">
+          <a href="/" class="nav-link">Home</a>
+          <a href="cart.html" class="nav-link">Cart <span class="cart-badge" id="cart-badge">0</span></a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 2rem 0;">
+    <div id="product-detail">
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading product...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('product-detail');
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('id');
+      
+      if (!productId) {
+        container.innerHTML = '<div class="alert alert-error">Product not found</div>';
+        return;
+      }
+      
+      try {
+        const result = await api.getMedicine(productId);
+        
+        if (result.success && result.data.medicine) {
+          const med = result.data.medicine;
+          
+          container.innerHTML = `
+            <div class="product-detail-layout">
+              <div class="product-detail-image">💊</div>
+              <div class="product-detail-info">
+                <h1>${med.name}</h1>
+                <p class="product-brand">${med.brand || ''}</p>
+                ${med.prescription_required ? '<span class="badge badge-rx">Prescription Required</span>' : ''}
+                
+                <div class="product-details-list">
+                  ${med.generic_name ? `<p><strong>Generic:</strong> ${med.generic_name}</p>` : ''}
+                  ${med.salt ? `<p><strong>Salt:</strong> ${med.salt}</p>` : ''}
+                  ${med.dosage_form ? `<p><strong>Form:</strong> ${med.dosage_form}</p>` : ''}
+                  ${med.strength ? `<p><strong>Strength:</strong> ${med.strength}</p>` : ''}
+                </div>
+                
+                <div class="product-actions" style="margin-top: 2rem;">
+                  <button class="btn btn-primary btn-lg" id="add-to-cart-btn">Add to Cart</button>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+            cart.addItem({
+              medicine_id: productId,
+              qty: 1
+            });
+            alert('Added to cart!');
+          });
+        } else {
+          container.innerHTML = '<div class="alert alert-error">Product not found</div>';
+        }
+      } catch (error) {
+        console.error('Error loading product:', error);
+        container.innerHTML = '<div class="alert alert-error">Failed to load product</div>';
+      }
+    });
+  </script>
+  
+  <style>
+    .product-detail-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 3rem;
+    }
+    
+    .product-detail-image {
+      width: 100%;
+      height: 400px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8rem;
+    }
+    
+    .product-detail-info h1 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .product-details-list {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+    }
+    
+    .product-details-list p {
+      margin-bottom: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+      .product-detail-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .product-detail-image {
+        height: 250px;
+        font-size: 5rem;
+      }
+    }
+  </style>
+</body>
+</html>

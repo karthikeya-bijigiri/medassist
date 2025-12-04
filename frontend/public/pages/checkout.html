@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - MedAssist</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+        </a>
+        <h2 style="margin: 0;">Checkout</h2>
+        <div></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 2rem 0;">
+    <div class="checkout-layout">
+      <div class="checkout-form-section">
+        <div class="card">
+          <h3>Delivery Address</h3>
+          <form id="checkout-form">
+            <div class="form-group">
+              <label class="form-label">Address Type</label>
+              <select name="label" class="form-input">
+                <option value="home">Home</option>
+                <option value="work">Work</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Full Address</label>
+              <textarea name="address" class="form-input" rows="3" placeholder="Street address, apartment, etc." required></textarea>
+            </div>
+            
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">City</label>
+                <input type="text" name="city" class="form-input" placeholder="City" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">PIN Code</label>
+                <input type="text" name="pincode" class="form-input" placeholder="6-digit PIN" pattern="[0-9]{6}" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full btn-lg">Place Order</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="checkout-summary">
+        <div class="card">
+          <h3>Order Summary</h3>
+          <div id="checkout-items">Loading...</div>
+          <hr>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span id="checkout-total">₹0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const itemsContainer = document.getElementById('checkout-items');
+      const totalEl = document.getElementById('checkout-total');
+      
+      const items = cart.getItems();
+      const total = cart.getTotal();
+      const tax = total * 0.18;
+      const delivery = total > 500 ? 0 : 40;
+      const finalTotal = total + tax + delivery;
+      
+      itemsContainer.innerHTML = `
+        <p>${items.length} item(s)</p>
+        <p>Subtotal: ₹${total.toFixed(2)}</p>
+        <p>Tax (18%): ₹${tax.toFixed(2)}</p>
+        <p>Delivery: ${delivery === 0 ? 'FREE' : `₹${delivery.toFixed(2)}`}</p>
+      `;
+      
+      totalEl.textContent = `₹${finalTotal.toFixed(2)}`;
+    });
+  </script>
+</body>
+</html>

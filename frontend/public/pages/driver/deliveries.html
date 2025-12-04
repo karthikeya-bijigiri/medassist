@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Deliveries - MedAssist Driver</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-info">Driver</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="deliveries.html" class="nav-link active">Deliveries</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">D</span>
+              <span class="user-name" id="user-name">Driver</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <h1>My Deliveries</h1>
+        <p class="text-secondary">View and manage your delivery history</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid stats-grid-3">
+        <div class="stat-card">
+          <div class="stat-value" id="total-deliveries">156</div>
+          <div class="stat-label">Total Deliveries</div>
+        </div>
+        <div class="stat-card stat-card-success">
+          <div class="stat-value" id="success-rate">98%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="avg-rating">4.8 ⭐</div>
+          <div class="stat-label">Average Rating</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <select class="form-select" id="filter-status">
+          <option value="">All Status</option>
+          <option value="assigned">Assigned</option>
+          <option value="picked_up">Picked Up</option>
+          <option value="in_transit">In Transit</option>
+          <option value="delivered">Delivered</option>
+          <option value="failed">Failed</option>
+        </select>
+        <select class="form-select" id="filter-date">
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="all">All Time</option>
+        </select>
+        <button class="btn btn-outline" id="refresh-btn">🔄 Refresh</button>
+      </div>
+
+      <!-- Deliveries List -->
+      <div class="card">
+        <div class="deliveries-history" id="deliveries-list">
+          <!-- Delivery items will be inserted here -->
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="btn btn-outline btn-sm" id="prev-page" disabled>Previous</button>
+          <span class="page-info" id="page-info">Page 1 of 5</span>
+          <button class="btn btn-outline btn-sm" id="next-page">Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Delivery Detail Modal -->
+  <div class="modal hidden" id="delivery-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Delivery Details - <span id="modal-delivery-id"></span></h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="delivery-details">
+        <!-- Delivery details will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    let currentPage = 1;
+    let totalPages = 5;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is a driver
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('driver')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Driver';
+      document.getElementById('user-avatar').textContent = (user.name || 'D')[0].toUpperCase();
+
+      // Event listeners
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      document.getElementById('filter-status').addEventListener('change', loadDeliveries);
+      document.getElementById('filter-date').addEventListener('change', loadDeliveries);
+      document.getElementById('refresh-btn').addEventListener('click', loadDeliveries);
+
+      document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadDeliveries();
+        }
+      });
+
+      document.getElementById('next-page').addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          loadDeliveries();
+        }
+      });
+
+      document.querySelector('.modal-backdrop').addEventListener('click', closeModal);
+
+      // Load deliveries
+      await loadDeliveries();
+    });
+
+    async function loadDeliveries() {
+      const container = document.getElementById('deliveries-list');
+      
+      // Simulated delivery history
+      const deliveries = [
+        {
+          _id: 'DEL-156',
+          order_id: 'ORD-456',
+          pharmacy: { name: 'HealthPlus Pharmacy', address: '123 Medical Street' },
+          customer: { name: 'John Doe', address: '456 Residential Area' },
+          status: 'delivered',
+          delivered_at: new Date().toISOString(),
+          amount: 450,
+          earnings: 80,
+          rating: 5
+        },
+        {
+          _id: 'DEL-155',
+          order_id: 'ORD-455',
+          pharmacy: { name: 'MedCare Drugstore', address: '789 Health Ave' },
+          customer: { name: 'Jane Smith', address: '321 Park Lane' },
+          status: 'delivered',
+          delivered_at: new Date(Date.now() - 3600000).toISOString(),
+          amount: 280,
+          earnings: 60,
+          rating: 4
+        },
+        {
+          _id: 'DEL-154',
+          order_id: 'ORD-454',
+          pharmacy: { name: 'HealthPlus Pharmacy', address: '123 Medical Street' },
+          customer: { name: 'Mike Johnson', address: '567 Green Road' },
+          status: 'delivered',
+          delivered_at: new Date(Date.now() - 7200000).toISOString(),
+          amount: 520,
+          earnings: 85,
+          rating: 5
+        },
+        {
+          _id: 'DEL-153',
+          order_id: 'ORD-453',
+          pharmacy: { name: 'City Pharmacy', address: '999 Main Road' },
+          customer: { name: 'Sarah Wilson', address: '888 Lake View' },
+          status: 'failed',
+          delivered_at: new Date(Date.now() - 10800000).toISOString(),
+          amount: 150,
+          earnings: 0,
+          rating: null,
+          failure_reason: 'Customer not available'
+        },
+        {
+          _id: 'DEL-152',
+          order_id: 'ORD-452',
+          pharmacy: { name: 'MedCare Drugstore', address: '789 Health Ave' },
+          customer: { name: 'Tom Brown', address: '444 Hill Road' },
+          status: 'in_transit',
+          amount: 380,
+          earnings: 70
+        }
+      ];
+
+      container.innerHTML = deliveries.map(delivery => `
+        <div class="delivery-history-item">
+          <div class="delivery-item-header">
+            <div class="delivery-item-info">
+              <span class="delivery-id">#${delivery._id}</span>
+              <span class="order-ref">Order: ${delivery.order_id}</span>
+            </div>
+            <div class="delivery-item-status">
+              <span class="badge ${getStatusBadgeClass(delivery.status)}">${formatStatus(delivery.status)}</span>
+              ${delivery.rating ? `<span class="rating">⭐ ${delivery.rating}</span>` : ''}
+            </div>
+          </div>
+          
+          <div class="delivery-item-body">
+            <div class="delivery-locations">
+              <div class="location-item">
+                <span class="location-label">From:</span>
+                <span class="location-text">${delivery.pharmacy.name}</span>
+              </div>
+              <div class="location-item">
+                <span class="location-label">To:</span>
+                <span class="location-text">${delivery.customer.name} - ${delivery.customer.address}</span>
+              </div>
+            </div>
+            
+            ${delivery.failure_reason ? `
+              <div class="failure-reason">
+                <span class="text-danger">Failed: ${delivery.failure_reason}</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="delivery-item-footer">
+            <div class="delivery-meta">
+              <span class="meta-item">
+                <span class="meta-label">Amount:</span>
+                <span class="meta-value">₹${delivery.amount}</span>
+              </span>
+              <span class="meta-item">
+                <span class="meta-label">Earnings:</span>
+                <span class="meta-value text-success">₹${delivery.earnings}</span>
+              </span>
+              <span class="meta-item">
+                <span class="meta-label">Time:</span>
+                <span class="meta-value">${formatTime(delivery.delivered_at)}</span>
+              </span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="viewDetails('${delivery._id}')">View Details</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Update pagination
+      document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prev-page').disabled = currentPage <= 1;
+      document.getElementById('next-page').disabled = currentPage >= totalPages;
+    }
+
+    function getStatusBadgeClass(status) {
+      const classes = {
+        'assigned': 'badge-info',
+        'picked_up': 'badge-info',
+        'in_transit': 'badge-warning',
+        'delivered': 'badge-success',
+        'failed': 'badge-danger'
+      };
+      return classes[status] || 'badge-secondary';
+    }
+
+    function formatStatus(status) {
+      const labels = {
+        'assigned': 'Assigned',
+        'picked_up': 'Picked Up',
+        'in_transit': 'In Transit',
+        'delivered': 'Delivered',
+        'failed': 'Failed'
+      };
+      return labels[status] || status;
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = Math.floor((now - date) / 60000);
+      
+      if (diff < 1) return 'Just now';
+      if (diff < 60) return `${diff} min ago`;
+      if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
+      return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+
+    function viewDetails(deliveryId) {
+      document.getElementById('modal-delivery-id').textContent = deliveryId;
+      document.getElementById('delivery-details').innerHTML = `
+        <div class="detail-section">
+          <h4>Delivery Information</h4>
+          <p><strong>Status:</strong> <span class="badge badge-success">Delivered</span></p>
+          <p><strong>Delivery Time:</strong> 45 minutes</p>
+          <p><strong>Distance:</strong> 5.2 km</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Pickup</h4>
+          <p><strong>Pharmacy:</strong> HealthPlus Pharmacy</p>
+          <p><strong>Address:</strong> 123 Medical Street, Andheri West</p>
+          <p><strong>Picked Up:</strong> 2:30 PM</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Delivery</h4>
+          <p><strong>Customer:</strong> John Doe</p>
+          <p><strong>Address:</strong> 456 Residential Area, Andheri East</p>
+          <p><strong>Delivered:</strong> 3:15 PM</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Earnings</h4>
+          <p><strong>Order Amount:</strong> ₹450</p>
+          <p><strong>Delivery Fee:</strong> ₹80</p>
+          <p><strong>Tip:</strong> ₹20</p>
+          <p><strong>Total Earnings:</strong> <span class="text-success">₹100</span></p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Rating & Feedback</h4>
+          <p>⭐⭐⭐⭐⭐ (5/5)</p>
+          <p><em>"Fast delivery, very professional!"</em></p>
+        </div>
+      `;
+      document.getElementById('delivery-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('delivery-modal').classList.add('hidden');
+    }
+  </script>
+
+  <style>
+    .delivery-history-item {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: var(--bg-primary);
+    }
+
+    .delivery-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .delivery-item-info {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .delivery-id {
+      font-weight: 600;
+    }
+
+    .order-ref {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .delivery-item-status {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .rating {
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+
+    .delivery-locations {
+      margin-bottom: 0.75rem;
+    }
+
+    .location-item {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .location-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      min-width: 40px;
+    }
+
+    .location-text {
+      font-size: 0.875rem;
+    }
+
+    .failure-reason {
+      padding: 0.5rem;
+      background: #fef2f2;
+      border-radius: var(--radius-sm);
+      margin-top: 0.5rem;
+    }
+
+    .delivery-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .delivery-meta {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .meta-item {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .meta-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .meta-value {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .detail-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-section h4 {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-section p {
+      margin: 0.25rem 0;
+    }
+  </style>
+</body>
+</html>

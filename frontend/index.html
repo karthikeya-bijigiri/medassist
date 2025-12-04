@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedAssist - Medicine Availability & Delivery</title>
+  <link rel="stylesheet" href="public/css/style.css">
+  <link rel="stylesheet" href="public/css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="/" class="nav-link active">Home</a>
+          <a href="public/pages/search-results.html" class="nav-link">Medicines</a>
+          <a href="public/pages/cart.html" class="nav-link">
+            Cart <span class="cart-badge" id="cart-badge">0</span>
+          </a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="auth-buttons" id="auth-buttons">
+            <a href="public/pages/login.html" class="btn btn-outline">Login</a>
+            <a href="public/pages/register.html" class="btn btn-primary">Sign Up</a>
+          </div>
+          <div class="user-menu hidden" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">U</span>
+              <span class="user-name" id="user-name">User</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <a href="public/pages/profile.html" class="dropdown-item">My Profile</a>
+              <a href="public/pages/order-tracking.html" class="dropdown-item">My Orders</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">Your Trusted Medicine Delivery Partner</h1>
+        <p class="hero-subtitle">Search from thousands of medicines, compare prices, and get them delivered to your doorstep</p>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-box">
+            <input 
+              type="text" 
+              class="search-input" 
+              id="medicine-search" 
+              placeholder="Search for medicines, brands, or health products..."
+              autocomplete="off"
+            >
+            <button class="search-btn" id="search-btn">
+              <span class="search-icon">🔍</span>
+              Search
+            </button>
+          </div>
+          <div class="autocomplete-results hidden" id="autocomplete-results"></div>
+        </div>
+
+        <div class="hero-features">
+          <div class="feature">
+            <span class="feature-icon">🚚</span>
+            <span>Fast Delivery</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">💰</span>
+            <span>Best Prices</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">✓</span>
+            <span>Genuine Medicines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+    <div class="container">
+      <h2 class="section-title">Browse by Category</h2>
+      <div class="categories-grid">
+        <a href="public/pages/search-results.html?category=pain-relief" class="category-card">
+          <span class="category-icon">💊</span>
+          <span class="category-name">Pain Relief</span>
+        </a>
+        <a href="public/pages/search-results.html?category=cold-flu" class="category-card">
+          <span class="category-icon">🤧</span>
+          <span class="category-name">Cold & Flu</span>
+        </a>
+        <a href="public/pages/search-results.html?category=vitamins" class="category-card">
+          <span class="category-icon">💪</span>
+          <span class="category-name">Vitamins</span>
+        </a>
+        <a href="public/pages/search-results.html?category=diabetes" class="category-card">
+          <span class="category-icon">🩺</span>
+          <span class="category-name">Diabetes Care</span>
+        </a>
+        <a href="public/pages/search-results.html?category=heart" class="category-card">
+          <span class="category-icon">❤️</span>
+          <span class="category-name">Heart Health</span>
+        </a>
+        <a href="public/pages/search-results.html?category=skincare" class="category-card">
+          <span class="category-icon">🧴</span>
+          <span class="category-name">Skin Care</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Search Medicine</h3>
+          <p>Search for medicines by name, brand, or composition</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Compare Prices</h3>
+          <p>Compare prices from nearby pharmacies</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Place Order</h3>
+          <p>Add to cart and checkout securely</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <h3>Get Delivery</h3>
+          <p>Track your order and get it delivered</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Medical Disclaimer -->
+  <section class="disclaimer-section">
+    <div class="container">
+      <div class="disclaimer-box">
+        <h3>⚠️ Medical Disclaimer</h3>
+        <p>MedAssist is a platform for purchasing OTC and prescription medicines. Always consult with a qualified healthcare professional before taking any medication. Prescription drugs require a valid prescription from a licensed medical practitioner. MedAssist does not provide medical advice, diagnosis, or treatment.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h4>MedAssist</h4>
+          <p>Your trusted medicine delivery partner. Quality medicines at best prices.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="/about">About Us</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/faq">FAQs</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/refund">Refund Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact</h4>
+          <p>support@medassist.com</p>
+          <p>1800-XXX-XXXX</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 MedAssist. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="public/js/api.js"></script>
+  <script src="public/js/auth.js"></script>
+  <script src="public/js/search.js"></script>
+  <script src="public/js/cart.js"></script>
+  <script src="public/js/app.js"></script>
+</body>
+</html>

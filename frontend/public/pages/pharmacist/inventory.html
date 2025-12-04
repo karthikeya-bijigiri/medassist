@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Management - MedAssist</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-primary">Pharmacist</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="inventory.html" class="nav-link active">Inventory</a>
+          <a href="orders.html" class="nav-link">Orders</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">P</span>
+              <span class="user-name" id="user-name">Pharmacist</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>Inventory Management</h1>
+          <p class="text-secondary">Manage your pharmacy's medicine inventory</p>
+        </div>
+        <button class="btn btn-primary" id="add-inventory-btn">
+          <span>➕</span> Add Item
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-box-inline">
+          <input type="text" class="form-input" id="search-inventory" placeholder="Search medicines...">
+        </div>
+        <select class="form-select" id="filter-stock">
+          <option value="">All Stock Levels</option>
+          <option value="low">Low Stock (&lt; 10)</option>
+          <option value="out">Out of Stock</option>
+          <option value="normal">Normal Stock</option>
+        </select>
+        <select class="form-select" id="filter-expiry">
+          <option value="">All Expiry</option>
+          <option value="expired">Expired</option>
+          <option value="30days">Expiring in 30 days</option>
+          <option value="90days">Expiring in 90 days</option>
+        </select>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table" id="inventory-table">
+            <thead>
+              <tr>
+                <th>Medicine Name</th>
+                <th>Brand</th>
+                <th>Batch No</th>
+                <th>Expiry Date</th>
+                <th>Stock</th>
+                <th>MRP</th>
+                <th>Selling Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-body">
+              <tr>
+                <td colspan="8" class="text-center text-secondary">Loading inventory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+          <button class="btn btn-outline btn-sm" id="prev-page" disabled>Previous</button>
+          <span class="page-info" id="page-info">Page 1 of 1</span>
+          <button class="btn btn-outline btn-sm" id="next-page" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Inventory Modal -->
+  <div class="modal hidden" id="inventory-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Inventory Item</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <form id="inventory-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Medicine *</label>
+            <select class="form-select" name="medicine_id" required>
+              <option value="">Select a medicine</option>
+              <option value="med1">Paracetamol 500mg - Crocin</option>
+              <option value="med2">Ibuprofen 400mg - Brufen</option>
+              <option value="med3">Cetirizine 10mg - Zyrtec</option>
+              <option value="med4">Vitamin C 500mg - Celin</option>
+              <option value="med5">Omeprazole 20mg - Prilosec</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Batch Number *</label>
+              <input type="text" class="form-input" name="batch_no" required placeholder="e.g., ABC123456">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Expiry Date *</label>
+              <input type="date" class="form-input" name="expiry_date" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity *</label>
+              <input type="number" class="form-input" name="quantity_available" required min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">MRP (₹) *</label>
+              <input type="number" class="form-input" name="mrp" required min="0" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selling Price (₹) *</label>
+            <input type="number" class="form-input" name="selling_price" required min="0" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    // Inventory Management Logic
+    let currentPage = 1;
+    let totalPages = 1;
+    let editingId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is a pharmacist
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('pharmacist')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Pharmacist';
+      document.getElementById('user-avatar').textContent = (user.name || 'P')[0].toUpperCase();
+
+      // Event listeners
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      document.getElementById('add-inventory-btn').addEventListener('click', () => {
+        openModal();
+      });
+
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('cancel-btn').addEventListener('click', closeModal);
+      document.querySelector('.modal-backdrop').addEventListener('click', closeModal);
+
+      document.getElementById('inventory-form').addEventListener('submit', handleSubmit);
+      document.getElementById('search-inventory').addEventListener('input', debounce(loadInventory, 300));
+      document.getElementById('filter-stock').addEventListener('change', loadInventory);
+      document.getElementById('filter-expiry').addEventListener('change', loadInventory);
+
+      // Load inventory
+      await loadInventory();
+    });
+
+    function openModal(item = null) {
+      const modal = document.getElementById('inventory-modal');
+      const form = document.getElementById('inventory-form');
+      const title = document.getElementById('modal-title');
+      
+      if (item) {
+        title.textContent = 'Edit Inventory Item';
+        editingId = item._id;
+        form.medicine_id.value = item.medicine_id;
+        form.batch_no.value = item.batch_no;
+        form.expiry_date.value = item.expiry_date.split('T')[0];
+        form.quantity_available.value = item.quantity_available;
+        form.mrp.value = item.mrp;
+        form.selling_price.value = item.selling_price;
+      } else {
+        title.textContent = 'Add Inventory Item';
+        editingId = null;
+        form.reset();
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('inventory-modal').classList.add('hidden');
+      editingId = null;
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        // API call would go here
+        console.log('Saving inventory:', data);
+        closeModal();
+        await loadInventory();
+        alert(editingId ? 'Inventory updated successfully!' : 'Inventory added successfully!');
+      } catch (error) {
+        console.error('Error saving inventory:', error);
+        alert('Failed to save inventory');
+      }
+    }
+
+    async function loadInventory() {
+      const tbody = document.getElementById('inventory-body');
+      
+      // Simulated inventory data
+      const inventory = [
+        { _id: '1', medicine: { name: 'Paracetamol 500mg', brand: 'Crocin', prescription_required: false }, batch_no: 'ABC123456', expiry_date: '2025-06-15', quantity_available: 150, mrp: 25, selling_price: 22 },
+        { _id: '2', medicine: { name: 'Ibuprofen 400mg', brand: 'Brufen', prescription_required: false }, batch_no: 'DEF789012', expiry_date: '2025-03-20', quantity_available: 8, mrp: 45, selling_price: 40 },
+        { _id: '3', medicine: { name: 'Cetirizine 10mg', brand: 'Zyrtec', prescription_required: false }, batch_no: 'GHI345678', expiry_date: '2024-12-30', quantity_available: 75, mrp: 35, selling_price: 30 },
+        { _id: '4', medicine: { name: 'Metformin 500mg', brand: 'Glycomet', prescription_required: true }, batch_no: 'JKL901234', expiry_date: '2025-08-10', quantity_available: 0, mrp: 55, selling_price: 48 },
+        { _id: '5', medicine: { name: 'Vitamin C 500mg', brand: 'Celin', prescription_required: false }, batch_no: 'MNO567890', expiry_date: '2026-01-25', quantity_available: 200, mrp: 20, selling_price: 18 }
+      ];
+
+      tbody.innerHTML = inventory.map(item => {
+        const isLowStock = item.quantity_available < 10;
+        const isOutOfStock = item.quantity_available === 0;
+        const isExpiringSoon = new Date(item.expiry_date) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+        
+        return `
+          <tr>
+            <td>
+              ${item.medicine.name}
+              ${item.medicine.prescription_required ? '<span class="badge badge-warning">Rx</span>' : ''}
+            </td>
+            <td>${item.medicine.brand}</td>
+            <td>${item.batch_no}</td>
+            <td class="${isExpiringSoon ? 'text-danger' : ''}">${formatDate(item.expiry_date)}</td>
+            <td>
+              <span class="${isOutOfStock ? 'text-danger' : isLowStock ? 'text-warning' : ''}">
+                ${item.quantity_available}
+                ${isOutOfStock ? '(Out)' : isLowStock ? '(Low)' : ''}
+              </span>
+            </td>
+            <td>₹${item.mrp}</td>
+            <td>₹${item.selling_price}</td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="editItem('${item._id}')">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteItem('${item._id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function editItem(id) {
+      // Simulate fetching item and opening modal
+      openModal({ _id: id, medicine_id: 'med1', batch_no: 'ABC123456', expiry_date: '2025-06-15', quantity_available: 150, mrp: 25, selling_price: 22 });
+    }
+
+    async function deleteItem(id) {
+      if (confirm('Are you sure you want to delete this item?')) {
+        console.log('Deleting item:', id);
+        await loadInventory();
+      }
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+  </script>
+</body>
+</html>

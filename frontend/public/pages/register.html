@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - MedAssist</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+        </a>
+        <h1>Create Account</h1>
+        <p>Join MedAssist today</p>
+      </div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" class="form-input" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-input" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" name="phone" class="form-input" placeholder="+91XXXXXXXXXX" required>
+          <span class="form-help">We'll send an OTP to verify your phone</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-input" placeholder="Create a password (min 8 characters)" required minlength="8">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account</button>
+      </form>
+
+      <form id="otp-form" class="hidden">
+        <div class="form-group">
+          <label class="form-label">Enter OTP</label>
+          <input type="text" name="otp" class="form-input" placeholder="Enter 6-digit OTP" required pattern="[0-9]{6}">
+          <span class="form-help">OTP sent to your phone number</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Verify OTP</button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+</body>
+</html>

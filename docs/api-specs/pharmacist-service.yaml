@@ -1,0 +1,594 @@
+openapi: 3.0.3
+info:
+  title: MedAssist Pharmacist Service API
+  description: |
+    Pharmacist management service for inventory and order handling.
+    
+    ## ⚠️ Medical Disclaimer
+    MedAssist is a platform for purchasing OTC and prescription medicines.
+    Always consult with a qualified healthcare professional before taking any medication.
+  version: 1.0.0
+  contact:
+    name: MedAssist Team
+    email: support@medassist.com
+
+servers:
+  - url: http://localhost:8001
+    description: Development server
+
+tags:
+  - name: Inventory
+    description: Inventory management endpoints
+  - name: Orders
+    description: Order management endpoints
+  - name: Profile
+    description: Pharmacist profile endpoints
+
+paths:
+  /api/v1/pharmacist/inventory:
+    get:
+      tags:
+        - Inventory
+      summary: List inventory
+      description: Get all inventory items for the pharmacist's pharmacy
+      operationId: listInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: low_stock
+          in: query
+          description: Filter low stock items
+          schema:
+            type: boolean
+        - name: expiring_soon
+          in: query
+          description: Filter items expiring within 3 months
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Inventory list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Inventory
+      summary: Add inventory item
+      description: Add a new medicine to the pharmacy inventory
+      operationId: addInventory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddInventoryRequest'
+      responses:
+        '201':
+          description: Inventory item added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate batch number
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/pharmacist/inventory/{id}:
+    put:
+      tags:
+        - Inventory
+      summary: Update inventory item
+      description: Update an existing inventory item
+      operationId: updateInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventoryRequest'
+      responses:
+        '200':
+          description: Inventory updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryResponse'
+        '404':
+          description: Inventory item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Inventory
+      summary: Delete inventory item
+      description: Remove an inventory item (only if no reserved quantity)
+      operationId: deleteInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventory deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Cannot delete - has reserved quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Inventory item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/pharmacist/orders:
+    get:
+      tags:
+        - Orders
+      summary: Get incoming orders
+      description: Get all orders for the pharmacist's pharmacy
+      operationId: listOrders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [created, accepted_by_pharmacy, prepared, driver_assigned, in_transit, delivered, cancelled, failed]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Order list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /api/v1/pharmacist/orders/{id}/accept:
+    post:
+      tags:
+        - Orders
+      summary: Accept order
+      description: Accept an incoming order
+      operationId: acceptOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estimated_prep_time:
+                  type: integer
+                  description: Estimated preparation time in minutes
+      responses:
+        '200':
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Cannot accept - wrong status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/pharmacist/orders/{id}/decline:
+    post:
+      tags:
+        - Orders
+      summary: Decline order
+      description: Decline an incoming order
+      operationId: declineOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Order declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Cannot decline - wrong status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/pharmacist/orders/{id}/prepared:
+    post:
+      tags:
+        - Orders
+      summary: Mark order as prepared
+      description: Mark an order as ready for pickup
+      operationId: markPrepared
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order marked as prepared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Cannot mark prepared - wrong status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/pharmacist/profile:
+    get:
+      tags:
+        - Profile
+      summary: Get pharmacist profile
+      description: Get the pharmacist's profile and pharmacy details
+      operationId: getProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+
+    put:
+      tags:
+        - Profile
+      summary: Update pharmacist profile
+      description: Update pharmacy details
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    InventoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            inventory:
+              type: array
+              items:
+                $ref: '#/components/schemas/InventoryItem'
+            total:
+              type: integer
+            page:
+              type: integer
+            pages:
+              type: integer
+
+    InventoryItem:
+      type: object
+      properties:
+        _id:
+          type: string
+        medicine_id:
+          type: string
+        medicine:
+          type: object
+          properties:
+            name:
+              type: string
+            brand:
+              type: string
+            generic_name:
+              type: string
+            prescription_required:
+              type: boolean
+        batch_no:
+          type: string
+        expiry_date:
+          type: string
+          format: date
+        quantity_available:
+          type: integer
+        mrp:
+          type: number
+        selling_price:
+          type: number
+        reserved_qty:
+          type: integer
+
+    InventoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            inventory:
+              $ref: '#/components/schemas/InventoryItem'
+
+    AddInventoryRequest:
+      type: object
+      required:
+        - medicine_id
+        - batch_no
+        - expiry_date
+        - quantity_available
+        - mrp
+        - selling_price
+      properties:
+        medicine_id:
+          type: string
+        batch_no:
+          type: string
+        expiry_date:
+          type: string
+          format: date
+        quantity_available:
+          type: integer
+          minimum: 0
+        mrp:
+          type: number
+          minimum: 0
+        selling_price:
+          type: number
+          minimum: 0
+
+    UpdateInventoryRequest:
+      type: object
+      properties:
+        quantity_available:
+          type: integer
+          minimum: 0
+        mrp:
+          type: number
+          minimum: 0
+        selling_price:
+          type: number
+          minimum: 0
+
+    OrderListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/Order'
+            total:
+              type: integer
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+        total_amount:
+          type: number
+        status:
+          type: string
+        payment_status:
+          type: string
+        shipping_address:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    OrderResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            order:
+              $ref: '#/components/schemas/Order'
+
+    ProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+            pharmacy:
+              type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+                address:
+                  type: string
+                opening_hours:
+                  type: string
+                is_active:
+                  type: boolean
+                rating:
+                  type: number
+                rating_count:
+                  type: integer
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        pharmacy_name:
+          type: string
+        address:
+          type: string
+        opening_hours:
+          type: string
+        contact_phone:
+          type: string
+        is_active:
+          type: boolean
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management - MedAssist</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-primary">Pharmacist</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="inventory.html" class="nav-link">Inventory</a>
+          <a href="orders.html" class="nav-link active">Orders</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">P</span>
+              <span class="user-name" id="user-name">Pharmacist</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <h1>Order Management</h1>
+        <p class="text-secondary">View and manage incoming orders</p>
+      </div>
+
+      <!-- Order Stats -->
+      <div class="stats-grid stats-grid-4">
+        <div class="stat-card stat-card-warning">
+          <div class="stat-value" id="pending-count">3</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card stat-card-info">
+          <div class="stat-value" id="preparing-count">2</div>
+          <div class="stat-label">Preparing</div>
+        </div>
+        <div class="stat-card stat-card-primary">
+          <div class="stat-value" id="ready-count">1</div>
+          <div class="stat-label">Ready for Pickup</div>
+        </div>
+        <div class="stat-card stat-card-success">
+          <div class="stat-value" id="completed-count">15</div>
+          <div class="stat-label">Completed Today</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <select class="form-select" id="filter-status">
+          <option value="">All Status</option>
+          <option value="created">Pending</option>
+          <option value="accepted_by_pharmacy">Preparing</option>
+          <option value="prepared">Ready for Pickup</option>
+          <option value="delivered">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <input type="date" class="form-input" id="filter-date" placeholder="Filter by date">
+        <button class="btn btn-outline" id="refresh-btn">🔄 Refresh</button>
+      </div>
+
+      <!-- Orders List -->
+      <div class="orders-list" id="orders-list">
+        <!-- Order Cards will be inserted here -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No orders found</h3>
+        <p>There are no orders matching your filters.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Order Detail Modal -->
+  <div class="modal hidden" id="order-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Order Details - <span id="order-id"></span></h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="order-details">
+        <!-- Order details will be inserted here -->
+      </div>
+      <div class="modal-footer" id="order-actions">
+        <!-- Actions will be inserted based on order status -->
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is a pharmacist
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('pharmacist')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Pharmacist';
+      document.getElementById('user-avatar').textContent = (user.name || 'P')[0].toUpperCase();
+
+      // Event listeners
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.querySelector('.modal-backdrop').addEventListener('click', closeModal);
+      document.getElementById('filter-status').addEventListener('change', loadOrders);
+      document.getElementById('filter-date').addEventListener('change', loadOrders);
+      document.getElementById('refresh-btn').addEventListener('click', loadOrders);
+
+      // Load orders
+      await loadOrders();
+    });
+
+    async function loadOrders() {
+      const ordersList = document.getElementById('orders-list');
+      
+      // Simulated orders data
+      const orders = [
+        {
+          _id: 'ORD-001',
+          customer: { name: 'John Doe', phone: '+919876543210' },
+          items: [
+            { medicine: { name: 'Paracetamol 500mg' }, qty: 2, price: 22 },
+            { medicine: { name: 'Cetirizine 10mg' }, qty: 1, price: 30 }
+          ],
+          total_amount: 74,
+          status: 'created',
+          payment_status: 'paid',
+          created_at: new Date().toISOString(),
+          shipping_address: { address_line: '123 Main St', city: 'Mumbai', pincode: '400001' }
+        },
+        {
+          _id: 'ORD-002',
+          customer: { name: 'Jane Smith', phone: '+919876543211' },
+          items: [
+            { medicine: { name: 'Vitamin C 500mg' }, qty: 3, price: 18 }
+          ],
+          total_amount: 54,
+          status: 'accepted_by_pharmacy',
+          payment_status: 'paid',
+          created_at: new Date(Date.now() - 30 * 60000).toISOString(),
+          shipping_address: { address_line: '456 Oak Ave', city: 'Mumbai', pincode: '400002' }
+        },
+        {
+          _id: 'ORD-003',
+          customer: { name: 'Mike Johnson', phone: '+919876543212' },
+          items: [
+            { medicine: { name: 'Omeprazole 20mg' }, qty: 1, price: 45 },
+            { medicine: { name: 'B-Complex' }, qty: 1, price: 60 }
+          ],
+          total_amount: 105,
+          status: 'prepared',
+          payment_status: 'paid',
+          created_at: new Date(Date.now() - 60 * 60000).toISOString(),
+          shipping_address: { address_line: '789 Pine Rd', city: 'Mumbai', pincode: '400003' }
+        }
+      ];
+
+      if (orders.length === 0) {
+        ordersList.innerHTML = '';
+        document.getElementById('empty-state').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('empty-state').classList.add('hidden');
+      
+      ordersList.innerHTML = orders.map(order => `
+        <div class="order-card ${order.status === 'created' ? 'order-card-pending' : ''}">
+          <div class="order-card-header">
+            <div class="order-info">
+              <span class="order-id">#${order._id}</span>
+              <span class="order-time">${formatTime(order.created_at)}</span>
+            </div>
+            <span class="badge ${getStatusBadgeClass(order.status)}">${formatStatus(order.status)}</span>
+          </div>
+          <div class="order-card-body">
+            <div class="customer-info">
+              <strong>${order.customer.name}</strong>
+              <span>${order.customer.phone}</span>
+            </div>
+            <div class="order-items">
+              ${order.items.map(item => `
+                <div class="order-item">
+                  <span>${item.medicine.name} x ${item.qty}</span>
+                  <span>₹${item.price * item.qty}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="order-total">
+              <strong>Total: ₹${order.total_amount}</strong>
+              <span class="badge ${order.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}">
+                ${order.payment_status.toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <div class="order-card-actions">
+            ${getOrderActions(order)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getStatusBadgeClass(status) {
+      const classes = {
+        'created': 'badge-warning',
+        'accepted_by_pharmacy': 'badge-info',
+        'prepared': 'badge-primary',
+        'driver_assigned': 'badge-info',
+        'in_transit': 'badge-info',
+        'delivered': 'badge-success',
+        'cancelled': 'badge-danger',
+        'failed': 'badge-danger'
+      };
+      return classes[status] || 'badge-secondary';
+    }
+
+    function formatStatus(status) {
+      const labels = {
+        'created': 'Pending',
+        'accepted_by_pharmacy': 'Preparing',
+        'prepared': 'Ready',
+        'driver_assigned': 'Driver Assigned',
+        'in_transit': 'In Transit',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled',
+        'failed': 'Failed'
+      };
+      return labels[status] || status;
+    }
+
+    function getOrderActions(order) {
+      switch (order.status) {
+        case 'created':
+          return `
+            <button class="btn btn-primary" onclick="acceptOrder('${order._id}')">Accept</button>
+            <button class="btn btn-danger" onclick="declineOrder('${order._id}')">Decline</button>
+            <button class="btn btn-outline" onclick="viewOrder('${order._id}')">View Details</button>
+          `;
+        case 'accepted_by_pharmacy':
+          return `
+            <button class="btn btn-success" onclick="markPrepared('${order._id}')">Mark as Ready</button>
+            <button class="btn btn-outline" onclick="viewOrder('${order._id}')">View Details</button>
+          `;
+        default:
+          return `
+            <button class="btn btn-outline" onclick="viewOrder('${order._id}')">View Details</button>
+          `;
+      }
+    }
+
+    function formatTime(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = Math.floor((now - date) / 60000); // minutes
+      
+      if (diff < 1) return 'Just now';
+      if (diff < 60) return `${diff} min ago`;
+      if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
+      return date.toLocaleDateString('en-IN');
+    }
+
+    async function acceptOrder(orderId) {
+      if (confirm('Accept this order?')) {
+        console.log('Accepting order:', orderId);
+        await loadOrders();
+      }
+    }
+
+    async function declineOrder(orderId) {
+      const reason = prompt('Enter reason for declining:');
+      if (reason) {
+        console.log('Declining order:', orderId, reason);
+        await loadOrders();
+      }
+    }
+
+    async function markPrepared(orderId) {
+      if (confirm('Mark this order as ready for pickup?')) {
+        console.log('Marking prepared:', orderId);
+        await loadOrders();
+      }
+    }
+
+    function viewOrder(orderId) {
+      document.getElementById('order-id').textContent = orderId;
+      document.getElementById('order-details').innerHTML = `
+        <div class="order-detail-section">
+          <h4>Order Information</h4>
+          <p><strong>Order ID:</strong> ${orderId}</p>
+          <p><strong>Status:</strong> Pending</p>
+          <p><strong>Payment:</strong> Paid</p>
+        </div>
+        <div class="order-detail-section">
+          <h4>Customer</h4>
+          <p><strong>Name:</strong> John Doe</p>
+          <p><strong>Phone:</strong> +919876543210</p>
+        </div>
+        <div class="order-detail-section">
+          <h4>Delivery Address</h4>
+          <p>123 Main Street, Apartment 4B</p>
+          <p>Mumbai - 400001</p>
+        </div>
+        <div class="order-detail-section">
+          <h4>Items</h4>
+          <table class="table">
+            <thead>
+              <tr><th>Item</th><th>Qty</th><th>Price</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Paracetamol 500mg</td><td>2</td><td>₹44</td></tr>
+              <tr><td>Cetirizine 10mg</td><td>1</td><td>₹30</td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td colspan="2"><strong>Total</strong></td><td><strong>₹74</strong></td></tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+      document.getElementById('order-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('order-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

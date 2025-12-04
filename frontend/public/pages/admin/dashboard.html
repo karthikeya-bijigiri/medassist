@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - MedAssist</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-danger">Admin</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="users.html" class="nav-link">Users</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">A</span>
+              <span class="user-name" id="user-name">Admin</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <h1>Admin Dashboard</h1>
+        <p class="text-secondary">System overview and management</p>
+      </div>
+
+      <!-- Platform Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <div class="stat-value" id="total-users">1,234</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏥</div>
+          <div class="stat-content">
+            <div class="stat-value" id="total-pharmacies">45</div>
+            <div class="stat-label">Pharmacies</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚗</div>
+          <div class="stat-content">
+            <div class="stat-value" id="total-drivers">28</div>
+            <div class="stat-label">Drivers</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <div class="stat-value" id="total-orders">5,678</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <section class="dashboard-section">
+        <h2>Quick Actions</h2>
+        <div class="action-grid">
+          <button class="action-card" id="create-pharmacist-btn">
+            <span class="action-icon">🏥</span>
+            <span class="action-label">Add Pharmacist</span>
+          </button>
+          <button class="action-card" id="create-driver-btn">
+            <span class="action-icon">🚗</span>
+            <span class="action-label">Add Driver</span>
+          </button>
+          <a href="users.html" class="action-card">
+            <span class="action-icon">👥</span>
+            <span class="action-label">Manage Users</span>
+          </a>
+          <button class="action-card" id="reindex-btn">
+            <span class="action-icon">🔄</span>
+            <span class="action-label">Reindex Search</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Today's Activity -->
+      <section class="dashboard-section">
+        <h2>Today's Activity</h2>
+        <div class="stats-grid stats-grid-3">
+          <div class="stat-card stat-card-success">
+            <div class="stat-value">156</div>
+            <div class="stat-label">Orders Completed</div>
+          </div>
+          <div class="stat-card stat-card-info">
+            <div class="stat-value">23</div>
+            <div class="stat-label">New Registrations</div>
+          </div>
+          <div class="stat-card stat-card-primary">
+            <div class="stat-value">₹45,890</div>
+            <div class="stat-label">Revenue</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>Recent Activity</h2>
+          <button class="btn btn-outline btn-sm">View All</button>
+        </div>
+        <div class="card">
+          <div class="activity-list" id="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon">👤</div>
+              <div class="activity-content">
+                <p><strong>New user registered:</strong> john@example.com</p>
+                <span class="activity-time">5 minutes ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">🏥</div>
+              <div class="activity-content">
+                <p><strong>New pharmacy added:</strong> HealthPlus Pharmacy</p>
+                <span class="activity-time">1 hour ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">📦</div>
+              <div class="activity-content">
+                <p><strong>Order completed:</strong> #ORD-5678</p>
+                <span class="activity-time">2 hours ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">⚠️</div>
+              <div class="activity-content">
+                <p><strong>Low stock alert:</strong> Paracetamol 500mg at 3 pharmacies</p>
+                <span class="activity-time">3 hours ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Create Pharmacist Modal -->
+  <div class="modal hidden" id="pharmacist-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create Pharmacist Account</h3>
+        <button class="modal-close" onclick="closeModal('pharmacist-modal')">&times;</button>
+      </div>
+      <form id="pharmacist-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Name *</label>
+            <input type="text" class="form-input" name="name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-input" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone *</label>
+            <input type="tel" class="form-input" name="phone" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input type="password" class="form-input" name="password" required minlength="8">
+          </div>
+          <hr>
+          <h4>Pharmacy Details</h4>
+          <div class="form-group">
+            <label class="form-label">Pharmacy Name *</label>
+            <input type="text" class="form-input" name="pharmacy_name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pharmacy Address *</label>
+            <textarea class="form-input" name="pharmacy_address" required rows="2"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="number" class="form-input" name="pharmacy_lat" step="any">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="number" class="form-input" name="pharmacy_lon" step="any">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('pharmacist-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Pharmacist</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Driver Modal -->
+  <div class="modal hidden" id="driver-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create Driver Account</h3>
+        <button class="modal-close" onclick="closeModal('driver-modal')">&times;</button>
+      </div>
+      <form id="driver-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Name *</label>
+            <input type="text" class="form-input" name="name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone *</label>
+            <input type="tel" class="form-input" name="phone" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input type="password" class="form-input" name="password" required minlength="8">
+          </div>
+          <p class="text-secondary">Username will be auto-generated as driver_[ID]</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('driver-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Driver</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is an admin
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('admin')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Admin';
+      document.getElementById('user-avatar').textContent = (user.name || 'A')[0].toUpperCase();
+
+      // Event listeners
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      document.getElementById('create-pharmacist-btn').addEventListener('click', () => {
+        document.getElementById('pharmacist-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('create-driver-btn').addEventListener('click', () => {
+        document.getElementById('driver-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('reindex-btn').addEventListener('click', async () => {
+        if (confirm('Start Elasticsearch reindex? This may take a few minutes.')) {
+          alert('Reindex started. You will be notified when complete.');
+        }
+      });
+
+      // Form submissions
+      document.getElementById('pharmacist-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        console.log('Creating pharmacist:', Object.fromEntries(formData));
+        closeModal('pharmacist-modal');
+        alert('Pharmacist account created successfully!');
+        e.target.reset();
+      });
+
+      document.getElementById('driver-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        console.log('Creating driver:', Object.fromEntries(formData));
+        closeModal('driver-modal');
+        alert('Driver account created successfully!');
+        e.target.reset();
+      });
+
+      // Close modals when clicking backdrop
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.addEventListener('click', () => {
+          backdrop.closest('.modal').classList.add('hidden');
+        });
+      });
+    });
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

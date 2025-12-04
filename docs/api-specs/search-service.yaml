@@ -1,0 +1,383 @@
+openapi: 3.0.3
+info:
+  title: MedAssist Search Service API
+  description: |
+    Full-text search and autocomplete service powered by Elasticsearch.
+    
+    ## ⚠️ Medical Disclaimer
+    MedAssist is a platform for purchasing OTC and prescription medicines.
+    Always consult with a qualified healthcare professional before taking any medication.
+  version: 1.0.0
+  contact:
+    name: MedAssist Team
+    email: support@medassist.com
+
+servers:
+  - url: http://localhost:3003
+    description: Development server
+
+tags:
+  - name: Search
+    description: Search endpoints
+  - name: Admin
+    description: Admin-only endpoints
+
+paths:
+  /api/v1/search/medicines:
+    get:
+      tags:
+        - Search
+      summary: Search medicines
+      description: Full-text search across medicines
+      operationId: searchMedicines
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: category
+          in: query
+          description: Filter by category/tag
+          schema:
+            type: string
+        - name: prescription_required
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicineSearchResponse'
+        '400':
+          description: Invalid search query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/autocomplete:
+    get:
+      tags:
+        - Search
+      summary: Autocomplete suggestions
+      description: Get autocomplete suggestions for medicine names
+      operationId: autocomplete
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Partial search query (minimum 2 characters)
+          schema:
+            type: string
+            minLength: 2
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 20
+      responses:
+        '200':
+          description: Autocomplete suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutocompleteResponse'
+
+  /api/v1/search/pharmacies:
+    get:
+      tags:
+        - Search
+      summary: Search pharmacies
+      description: Search pharmacies with geo-filtering
+      operationId: searchPharmacies
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitude
+          schema:
+            type: number
+        - name: lon
+          in: query
+          required: true
+          description: Longitude
+          schema:
+            type: number
+        - name: radius
+          in: query
+          description: Search radius in kilometers
+          schema:
+            type: number
+            default: 10
+        - name: medicine_id
+          in: query
+          description: Filter by medicine availability
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Pharmacy search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PharmacySearchResponse'
+        '400':
+          description: Invalid coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/admin/reindex:
+    post:
+      tags:
+        - Admin
+      summary: Reindex Elasticsearch
+      description: Trigger a full reindex of all data in Elasticsearch
+      operationId: reindex
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                index:
+                  type: string
+                  enum: [medicines, pharmacies, inventory, all]
+                  default: all
+      responses:
+        '200':
+          description: Reindex started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  job_id:
+                    type: string
+        '403':
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  elasticsearch:
+                    type: string
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    MedicineSearchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/MedicineSearchResult'
+            total:
+              type: integer
+            page:
+              type: integer
+            pages:
+              type: integer
+            query:
+              type: string
+
+    MedicineSearchResult:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        brand:
+          type: string
+        generic_name:
+          type: string
+        salt:
+          type: string
+        dosage_form:
+          type: string
+        strength:
+          type: string
+        prescription_required:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        _score:
+          type: number
+          description: Elasticsearch relevance score
+        highlight:
+          type: object
+          description: Highlighted matching fields
+
+    AutocompleteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            suggestions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AutocompleteSuggestion'
+            query:
+              type: string
+
+    AutocompleteSuggestion:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        brand:
+          type: string
+        generic_name:
+          type: string
+        prescription_required:
+          type: boolean
+        type:
+          type: string
+          enum: [medicine, brand, generic]
+
+    PharmacySearchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/PharmacySearchResult'
+            total:
+              type: integer
+            center:
+              type: object
+              properties:
+                lat:
+                  type: number
+                lon:
+                  type: number
+            radius:
+              type: number
+
+    PharmacySearchResult:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        geo:
+          type: object
+          properties:
+            type:
+              type: string
+            coordinates:
+              type: array
+              items:
+                type: number
+        opening_hours:
+          type: string
+        is_active:
+          type: boolean
+        rating:
+          type: number
+        rating_count:
+          type: integer
+        distance:
+          type: number
+          description: Distance in km from search center
+        has_medicine:
+          type: boolean
+          description: Whether the pharmacy has the searched medicine
+
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object

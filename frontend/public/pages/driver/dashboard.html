@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Dashboard - MedAssist</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">💊</span>
+          <span class="logo-text">MedAssist</span>
+          <span class="badge badge-info">Driver</span>
+        </a>
+        
+        <nav class="nav" id="main-nav">
+          <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          <a href="deliveries.html" class="nav-link">Deliveries</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="status-toggle">
+            <label class="switch">
+              <input type="checkbox" id="online-toggle" checked>
+              <span class="slider"></span>
+            </label>
+            <span id="status-text" class="text-success">Online</span>
+          </div>
+          <div class="user-menu" id="user-menu">
+            <button class="user-menu-btn" id="user-menu-btn">
+              <span class="user-avatar" id="user-avatar">D</span>
+              <span class="user-name" id="user-name">Driver</span>
+            </button>
+            <div class="dropdown-menu hidden" id="user-dropdown">
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <div class="page-header">
+        <h1>Driver Dashboard</h1>
+        <p class="text-secondary">Your delivery overview</p>
+      </div>
+
+      <!-- Today's Stats -->
+      <div class="stats-grid stats-grid-4">
+        <div class="stat-card stat-card-info">
+          <div class="stat-value" id="pending-deliveries">2</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card stat-card-warning">
+          <div class="stat-value" id="in-progress">1</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card stat-card-success">
+          <div class="stat-value" id="completed-today">8</div>
+          <div class="stat-label">Completed Today</div>
+        </div>
+        <div class="stat-card stat-card-primary">
+          <div class="stat-value" id="earnings">₹640</div>
+          <div class="stat-label">Today's Earnings</div>
+        </div>
+      </div>
+
+      <!-- Current Delivery -->
+      <section class="dashboard-section" id="current-delivery-section">
+        <h2>Current Delivery</h2>
+        <div class="current-delivery-card" id="current-delivery">
+          <div class="delivery-header">
+            <div>
+              <span class="delivery-id">#DEL-003</span>
+              <span class="badge badge-warning">In Transit</span>
+            </div>
+            <span class="delivery-time">Started 15 mins ago</span>
+          </div>
+          
+          <div class="delivery-route">
+            <div class="route-point pickup">
+              <div class="route-icon">📍</div>
+              <div class="route-details">
+                <strong>Pickup: HealthPlus Pharmacy</strong>
+                <p>123 Medical Street, Andheri West</p>
+                <span class="text-success">✓ Picked up</span>
+              </div>
+            </div>
+            <div class="route-line"></div>
+            <div class="route-point delivery">
+              <div class="route-icon">🏠</div>
+              <div class="route-details">
+                <strong>Deliver to: John Doe</strong>
+                <p>456 Residential Area, Andheri East</p>
+                <a href="#" class="text-link">Get Directions</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="delivery-info">
+            <div class="info-item">
+              <span class="info-label">Order Amount</span>
+              <span class="info-value">₹450</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Payment</span>
+              <span class="info-value badge badge-success">Prepaid</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Items</span>
+              <span class="info-value">3 items</span>
+            </div>
+          </div>
+
+          <div class="delivery-actions">
+            <button class="btn btn-primary btn-lg" id="confirm-delivery-btn">
+              Confirm Delivery (Enter OTP)
+            </button>
+            <button class="btn btn-outline" onclick="callCustomer()">📞 Call Customer</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Available Deliveries -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>Available Deliveries</h2>
+          <button class="btn btn-outline btn-sm" id="refresh-btn">🔄 Refresh</button>
+        </div>
+        <div class="deliveries-list" id="available-deliveries">
+          <!-- Delivery cards will be inserted here -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- OTP Modal -->
+  <div class="modal hidden" id="otp-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Confirm Delivery</h3>
+        <button class="modal-close" onclick="closeOtpModal()">&times;</button>
+      </div>
+      <form id="otp-form">
+        <div class="modal-body">
+          <p class="text-secondary">Enter the OTP provided by the customer to confirm delivery.</p>
+          <div class="form-group">
+            <label class="form-label">Delivery OTP</label>
+            <input type="text" class="form-input otp-input" name="otp" maxlength="6" pattern="[0-9]{4,6}" required placeholder="Enter OTP">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (Optional)</label>
+            <textarea class="form-input" name="notes" rows="2" placeholder="Any delivery notes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeOtpModal()">Cancel</button>
+          <button type="submit" class="btn btn-success">Confirm Delivery</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in and is a driver
+      const user = Auth.getUser();
+      if (!user || !user.roles.includes('driver')) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Update user info
+      document.getElementById('user-name').textContent = user.name || 'Driver';
+      document.getElementById('user-avatar').textContent = (user.name || 'D')[0].toUpperCase();
+
+      // Event listeners
+      document.getElementById('user-menu-btn').addEventListener('click', () => {
+        document.getElementById('user-dropdown').classList.toggle('hidden');
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.logout();
+        window.location.href = '../login.html';
+      });
+
+      document.getElementById('online-toggle').addEventListener('change', (e) => {
+        const statusText = document.getElementById('status-text');
+        if (e.target.checked) {
+          statusText.textContent = 'Online';
+          statusText.className = 'text-success';
+        } else {
+          statusText.textContent = 'Offline';
+          statusText.className = 'text-secondary';
+        }
+      });
+
+      document.getElementById('confirm-delivery-btn').addEventListener('click', () => {
+        document.getElementById('otp-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('otp-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const otp = e.target.otp.value;
+        console.log('Confirming delivery with OTP:', otp);
+        closeOtpModal();
+        alert('Delivery confirmed successfully!');
+        await loadDashboard();
+      });
+
+      document.getElementById('refresh-btn').addEventListener('click', loadAvailableDeliveries);
+
+      document.querySelector('.modal-backdrop').addEventListener('click', closeOtpModal);
+
+      // Start location updates
+      startLocationUpdates();
+
+      // Load dashboard data
+      await loadDashboard();
+      await loadAvailableDeliveries();
+    });
+
+    async function loadDashboard() {
+      // In real app, fetch from API
+      console.log('Loading dashboard data...');
+    }
+
+    async function loadAvailableDeliveries() {
+      const container = document.getElementById('available-deliveries');
+      
+      // Simulated available deliveries
+      const deliveries = [
+        {
+          _id: 'DEL-004',
+          pharmacy: { name: 'MedCare Drugstore', address: '789 Health Ave, Bandra' },
+          customer: { name: 'Jane Smith', address: '321 Park Lane, Bandra West' },
+          distance: 2.5,
+          amount: 280,
+          items: 2
+        },
+        {
+          _id: 'DEL-005',
+          pharmacy: { name: 'HealthPlus Pharmacy', address: '123 Medical Street, Andheri' },
+          customer: { name: 'Mike Johnson', address: '567 Green Road, Andheri East' },
+          distance: 3.8,
+          amount: 520,
+          items: 4
+        }
+      ];
+
+      if (deliveries.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <h3>No deliveries available</h3>
+            <p>Check back soon for new delivery requests.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = deliveries.map(delivery => `
+        <div class="delivery-card">
+          <div class="delivery-card-header">
+            <span class="delivery-id">#${delivery._id}</span>
+            <span class="delivery-distance">${delivery.distance} km</span>
+          </div>
+          <div class="delivery-card-body">
+            <div class="delivery-locations">
+              <div class="location pickup">
+                <span class="location-icon">📍</span>
+                <div>
+                  <strong>${delivery.pharmacy.name}</strong>
+                  <p>${delivery.pharmacy.address}</p>
+                </div>
+              </div>
+              <div class="location drop">
+                <span class="location-icon">🏠</span>
+                <div>
+                  <strong>${delivery.customer.name}</strong>
+                  <p>${delivery.customer.address}</p>
+                </div>
+              </div>
+            </div>
+            <div class="delivery-meta">
+              <span>₹${delivery.amount}</span>
+              <span>${delivery.items} items</span>
+            </div>
+          </div>
+          <div class="delivery-card-actions">
+            <button class="btn btn-primary" onclick="acceptDelivery('${delivery._id}')">Accept</button>
+            <button class="btn btn-outline" onclick="viewDetails('${delivery._id}')">Details</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function acceptDelivery(deliveryId) {
+      if (confirm('Accept this delivery?')) {
+        console.log('Accepting delivery:', deliveryId);
+        alert('Delivery accepted! Navigate to pickup location.');
+        await loadAvailableDeliveries();
+      }
+    }
+
+    function viewDetails(deliveryId) {
+      alert('View delivery details: ' + deliveryId);
+    }
+
+    function callCustomer() {
+      alert('Calling customer...');
+    }
+
+    function closeOtpModal() {
+      document.getElementById('otp-modal').classList.add('hidden');
+    }
+
+    function startLocationUpdates() {
+      if ('geolocation' in navigator) {
+        // Update location every 30 seconds
+        setInterval(() => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              console.log('Location update:', position.coords.latitude, position.coords.longitude);
+              // API call to update location would go here
+            },
+            (error) => {
+              console.error('Location error:', error);
+            }
+          );
+        }, 30000);
+      }
+    }
+  </script>
+
+  <style>
+    /* Driver-specific styles */
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-right: 1rem;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 26px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--secondary-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .current-delivery-card {
+      background: var(--bg-primary);
+      border: 2px solid var(--primary-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .delivery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .delivery-route {
+      position: relative;
+      padding: 1rem 0;
+    }
+
+    .route-point {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+
+    .route-icon {
+      font-size: 1.5rem;
+    }
+
+    .route-details p {
+      color: var(--text-secondary);
+      margin: 0.25rem 0;
+    }
+
+    .route-line {
+      position: absolute;
+      left: 1.25rem;
+      top: 3rem;
+      bottom: 3rem;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+    }
+
+    .delivery-info {
+      display: flex;
+      gap: 2rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      margin: 1rem 0;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .info-value {
+      font-weight: 600;
+    }
+
+    .delivery-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .delivery-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .delivery-card-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .delivery-distance {
+      color: var(--text-secondary);
+    }
+
+    .delivery-locations {
+      margin-bottom: 1rem;
+    }
+
+    .location {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .location p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    .delivery-meta {
+      display: flex;
+      gap: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      padding: 0.5rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .delivery-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .otp-input {
+      font-size: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.5rem;
+    }
+  </style>
+</body>
+</html>

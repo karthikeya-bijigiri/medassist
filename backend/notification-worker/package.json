@@ -1,0 +1,22 @@
+{
+  "name": "@medassist/notification-worker",
+  "version": "1.0.0",
+  "description": "Notification worker service for MedAssist platform",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "keywords": ["medassist", "notifications", "worker"],
+  "author": "MedAssist Team",
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^8.0.3",
+    "@medassist/shared": "file:../shared"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
+  }
+}
